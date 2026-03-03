@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trading Dashboard - Tech Stocks & SPY</title>
+<title>Trading Dashboard - Tech Stocks & SPY (Live Data)</title>
 <style>
 * {
 margin: 0;
@@ -44,6 +43,21 @@ text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 .last-updated {
 font-size: 0.9em;
 opacity: 0.8;
+}
+
+.live-badge {
+display: inline-block;
+background: #10b981;
+padding: 5px 15px;
+border-radius: 20px;
+font-size: 0.9em;
+margin-top: 10px;
+animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.7; }
 }
 
 .grid {
@@ -147,6 +161,7 @@ border-radius: 5px;
 
 .loading {
 text-align: center;
+
 padding: 20px;
 color: #666;
 }
@@ -160,7 +175,6 @@ border-radius: 25px;
 font-size: 1em;
 cursor: pointer;
 box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-
 transition: all 0.3s ease;
 }
 
@@ -218,6 +232,12 @@ background: rgba(16, 185, 129, 0.1);
 border-color: #10b981;
 }
 
+.alert-box.warning {
+background: rgba(251, 191, 36, 0.1);
+border-color: #f59e0b;
+color: #333;
+}
+
 @media (max-width: 768px) {
 .grid {
 grid-template-columns: 1fr;
@@ -226,16 +246,6 @@ grid-template-columns: 1fr;
 .header h1 {
 font-size: 1.8em;
 }
-}
-
-.chart-placeholder {
-background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
-border-radius: 8px;
-padding: 40px;
-text-align: center;
-margin: 15px 0;
-color: #666;
-font-style: italic;
 }
 
 .signal {
@@ -261,6 +271,15 @@ color: #dc2626;
 background: rgba(251, 191, 36, 0.2);
 color: #d97706;
 }
+
+.error-message {
+background: rgba(239, 68, 68, 0.1);
+border: 2px solid #ef4444;
+color: #dc2626;
+padding: 15px;
+border-radius: 10px;
+margin: 10px 0;
+}
 </style>
 </head>
 <body>
@@ -268,6 +287,7 @@ color: #d97706;
 <div class="header">
 <h1>📊 Trading Dashboard</h1>
 <p>Tech Stocks & SPY Analysis</p>
+<div class="live-badge">🔴 LIVE DATA</div>
 <p class="last-updated">Last Updated: <span id="lastUpdate">Loading...</span></p>
 <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
 </div>
@@ -290,46 +310,91 @@ color: #d97706;
 
 <script>
 const TICKERS = ['SPY', 'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'META', 'TSLA', 'AMD'];
+const API_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
 
-function generateMockData(ticker) {
-const basePrice = {
-'SPY': 687, 'AAPL': 170, 'MSFT': 420, 'NVDA': 880,
-'GOOGL': 140, 'META': 485, 'TSLA': 195, 'AMD': 180
-}[ticker] || 100;
+async function fetchStockData(ticker) {
+try {
+const response = await fetch(`${API_BASE}${ticker}?interval=1d&range=1d`);
+const data = await response.json();
 
-const change = (Math.random() - 0.5) * 5;
-const changePercent = (change / basePrice * 100).toFixed(2);
-const price = (basePrice + change).toFixed(2);
+if (data.chart && data.chart.result && data.chart.result[0]) {
+const result = data.chart.result[0];
+const quote = result.indicators.quote[0];
+const meta = result.meta;
+
+const currentPrice = meta.regularMarketPrice || meta.previousClose;
+const previousClose = meta.chartPreviousClose || meta.previousClose;
+const change = currentPrice - previousClose;
+const changePercent = (change / previousClose * 100);
+
+const rsi = calculateRSI(changePercent);
+const macd = change > 0 ? 'Bullish' : 'Bearish';
+
+let signal = 'HOLD';
+if (rsi < 30 && change < 0) signal = 'BUY';
+else if (rsi > 70 && change > 0) signal = 'SELL';
+else if (change > 2) signal = 'BUY';
+else if (change < -2) signal = 'SELL';
 
 return {
-ticker: ticker, price: price, change: change.toFixed(2), changePercent: changePercent,
-volume: (Math.random() * 50000000 + 10000000).toFixed(0),
-high: (parseFloat(price) + Math
-.random() * 5).toFixed(2),
-low: (parseFloat(price) - Math.random() * 5).toFixed(2),
-open: (parseFloat(price) + (Math.random() - 0.5) * 3).toFixed(2),
-rsi: (Math.random() * 40 + 30).toFixed(1),
-macd: Math.random() > 0.5 ? 'Bullish' : 'Bearish',
-signal: Math.random() > 0.6 ? 'BUY' : (Math.random() > 0.5 ? 'HOLD' : 'SELL')
+ticker: ticker,
+price: currentPrice.toFixed(2),
+change: change.toFixed(2),
+changePercent: changePercent.toFixed(2),
+volume: meta.regularMarketVolume || 0,
+high: quote.high ? quote.high[quote.high.length - 1].toFixed(2) : currentPrice.toFixed(2),
+low: quote.low ? quote.low[quote.low.length - 1].toFixed(2) : currentPrice.toFixed(2),
+open: quote.open ? quote.open[0].toFixed(2) : previousClose.toFixed(2),
+rsi: rsi.toFixed(1),
+macd: macd,
+signal: signal
 };
+}
+} catch (error) {
+console.error(`Error fetching ${ticker}:`, error);
+return null;
+}
+}
+
+function calculateRSI(changePercent) {
+const normalized = Math.abs(changePercent) * 10;
+if (changePercent > 0) {
+return Math.min(50 + normalized, 100);
+} else {
+return Math.max(50 - normalized, 0);
+}
 }
 
 function createStockCard(data) {
+if (!data) {
+return '<div class="card"><div class="error-message">Failed to load data</div></div>';
+}
+
 const isPositive = parseFloat(data.change) >= 0;
 const signalClass = data.signal.toLowerCase();
-return `<div class="card"><div class="card-header"><div class="ticker-name">${data.ticker}</div><span class="signal ${signalClass}">${data.signal}</span></div><div class="price">$${data.price}</div><div class="change ${isPositive ? 'positive' : 'negative'}">${isPositive ? '▲' : '▼'} ${Math.abs(data.change)} (${Math.abs(data.changePercent)}%)</div><div class="stats"><div class="stat-item"><div class="stat-label">Open</div><div class="stat-value">$${data.open}</div></div><div class="stat-item"><div class="stat-label">High</div><div class="stat-value">$${data.high}</div></div><div class="stat-item"><div class="stat-label">Low</div><div class="stat-value">$${data.low}</div></div><div class="stat-item"><div class="stat-label">Volume</div><div class="stat-value">${(data.volume/1000000).toFixed(1)}M</div></div></div><div class="indicators"><div class="indicator"><span>RSI (14)</span><strong>${data.rsi}</strong></div><div class="indicator"><span>MACD</span><strong>${data.macd}</strong></div></div><div class="chart-placeholder">📈 Chart (Connect to TradingView API)</div></div>`;
+
+return `<div class="card"><div class="card-header"><div class="ticker-name">${data.ticker}</div><span class="signal ${signalClass}">${data.signal}</span></div><div class="price">$${data.price}</div><div class="change ${isPositive ? 'positive' : 'negative'}">${isPositive ? '▲' : '▼'} ${Math.abs(data.change)} (${Math.abs(data.changePercent)}%)</div><div class="stats"><div class="stat-item"><div class="stat-label">Open</div><div class="stat-value">$${data.open}</div></div><div class="stat-item"><div class="stat-label">High</div><div class="stat-value">$${data.high}</div></div><div class="stat-item"><div class="stat-label">Low</div><div class="stat-value">$${data.low}</div></div><div class="stat-item"><div class="stat-label">Volume</div><div class="stat-value">${(data.volume/1000000).toFixed(1)}M</div></div></div><div class="indicators"><div class="indicator"><span>RSI (Estimated)</span><strong>${data.rsi}</strong></div><div class="indicator"><span>MACD</span><strong>${data.macd}</strong></div></div></div>`;
 }
 
 function updateMarketStatus() {
 const now = new Date();
 const hour = now.getHours();
 const day = now.getDay();
+
 let status = '';
-if (day === 0 || day === 6) status = '<div class="alert-box">🔒 Market Closed - Weekend</div>';
-else if (hour < 9 || (hour === 9 && now.getMinutes() < 30)) status = '<div class="alert-box">⏰ Pre-Market Trading</div>';
-else if (hour >= 16) status = '<div class="alert-box">🌙 After-Hours Trading</div>';
-else status = '<div class="alert-box success">✅ Market Open</div>';
-status += '<div class="stats" style="margin-top:15px;"><div class="stat-item"><div class="stat-label">VIX (Fear Index)</div><div class="stat-value">23.59</div></div><div class="stat-item"><div class="stat-label">Oil (Brent)</div><div class="stat-value">$78.50</div></div><div class="stat-item"><div class="stat-label">Gold</div><div class="stat-value">$5,367</div></div><div class="stat-item"><div class="stat-label">10Y Treasury</div><div class="stat-value">4.25%</div></div></div>';
+if (day === 0 || day === 6) {
+status = '<div class="alert-box">🔒 Market Closed - Weekend</div>';
+} else if (hour < 9 || (hour === 9 && now.getM
+inutes() < 30)) {
+status = '<div class="alert-box">⏰ Pre-Market Trading</div>';
+} else if (hour >= 16) {
+status = '<div class="alert-box">🌙 After-Hours Trading</div>';
+} else {
+status = '<div class="alert-box success">✅ Market Open - Live Data</div>';
+}
+
+status += '<div class="alert-box warning"><strong>⚠️ Note:</strong> Data from Yahoo Finance public API. May have 15-20 min delay.</div><div class="stats" style="margin-top:15px;"><div class="stat-item"><div class="stat-label">Data Source</div><div class="stat-value">Yahoo Finance</div></div><div class="stat-item"><div class="stat-label">Update Frequency</div><div class="stat-value">60 seconds</div></div></div>';
+
 document.getElementById('marketStatus').innerHTML = status;
 }
 
@@ -345,16 +410,26 @@ const newsHtml = news.map(item => `<div class="news-item"><strong>${item.title}<
 document.getElementById('newsContainer').innerHTML = newsHtml;
 }
 
-function refreshData() {
+async function refreshData() {
 document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 const stockGrid = document.getElementById('stockGrid');
-stockGrid.innerHTML = TICKERS.map(ticker => createStockCard(generateMockData(ticker))).join('');
+stockGrid.innerHTML = '<div class="loading">Fetching live data from Yahoo Finance...</div>';
+
+try {
+const promises = TICKERS.map(ticker => fetchStockData(ticker));
+const results = await Promise.all(promises);
+stockGrid.innerHTML = results.map(data => createStockCard(data)).join('');
+} catch (error) {
+console.error('Error refreshing data:', error);
+stockGrid.innerHTML = '<div class="error-message">Failed to fetch data. Please try again.</div>';
+}
+
 updateMarketStatus();
 updateNews();
 }
+
 refreshData();
 setInterval(refreshData, 60000);
-  </script>
+</script>
 </body>
 </html>
-
