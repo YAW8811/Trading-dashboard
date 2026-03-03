@@ -71,7 +71,7 @@ box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); transition: transform 0.3s ease; colo
 <div id="stockGrid" class="grid"></div>
 </div>
 <script>
-const API_KEY = 'd6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0';
+const API_KEY = d6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0;
 const TICKERS = ['SPY', 'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'META', 'TSLA', 'AMD'];
 
 async function fetchStockData(ticker) {
@@ -120,8 +120,8 @@ document.getElementById('marketStatus').innerHTML = status;
 }
 
 async function refreshData() {
-if (API_KEY === 'd6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0') {
-document.getElementById('stockGrid').innerHTML = '<div class="alert-box" style="grid-column:1/-1;"><strong>⚠️ API Key Required</strong><br>d6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0<br><br>Get free key: <a href="https://finnhub.io/register" target="_blank" style="color:#667eea;">finnhub.io/register</a></div>';
+if (API_KEY === d6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0) {
+document.getElementById('stockGrid').innerHTML = '<div class="alert-box" style="grid-column:1/-1;"><strong>⚠️ API Key Required</strong><br>Please replace YOUR_API_KEY_HERE with your Finnhub API key.<br><br>Get free key: <a href="https://finnhub.io/register" target="_blank" style="color:#667eea;">finnhub.io/register</a></div>';
 return;
 }
 document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
