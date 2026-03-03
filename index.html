@@ -3,139 +3,353 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trading Dashboard - Live Real-Time Data</title>
+<title>Trading Dashboard - Tech Stocks & SPY</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
 body {
 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-color: #fff; padding: 20px; min-height: 100vh;
+color: #fff;
+padding: 20px;
+min-height: 100vh;
 }
-.container { max-width: 1400px; margin: 0 auto; }
+
+.container {
+max-width: 1400px;
+margin: 0 auto;
+}
+
 .header {
-text-align: center; margin-bottom: 30px; padding: 20px;
-background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
-border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+text-align: center;
+margin-bottom: 30px;
+padding: 20px;
+background: rgba(255, 255, 255, 0.1);
+backdrop-filter: blur(10px);
+border-radius: 15px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
-.header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
-.live-badge {
-display: inline-block; background: #10b981; padding: 5px 15px;
-border-radius: 20px; font-size: 0.9em; margin-top: 10px;
-animation: pulse 2s infinite;
+
+.header h1 {
+font-size: 2.5em;
+margin-bottom: 10px;
+text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px; }
+
+.last-updated {
+font-size: 0.9em;
+opacity: 0.8;
+}
+
+.grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+gap: 20px;
+margin-bottom: 30px;
+}
+
 .card {
-background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 20px;
-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); transition: transform 0.3s ease; color: #333;
+background: rgba(255, 255, 255, 0.95);
+border-radius: 15px;
+padding: 20px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+color: #333;
 }
-.card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
-.ticker-name { font-size: 1.8em; font-weight: bold; color: #667eea; }
-.price { font-size: 2em; font-weight: bold; margin: 10px 0; }
-.change { font-size: 1.2em; padding: 5px 15px; border-radius: 20px; display: inline-block; }
-.positive { color: #10b981; background: rgba(16, 185, 129, 0.1); }
-.negative { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
-.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; }
-.stat-item { background: #f8f9fa; padding: 10px; border-radius: 8px; }
-.stat-label { font-size: 0.85em; color: #666; margin-bottom: 5px; }
-.stat-value { font-size: 1.1em; font-weight: bold; color: #333; }
-.refresh-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 1em; cursor: pointer; transition: all 0.3s ease; }
-.refresh-btn:hover { transform: translateY(-2px); }
-.market-overview { background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; margin-bottom: 30px; color: #333; }
-.market-overview h2 { margin-bottom: 20px; color: #667eea; }
-.alert-box { background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
-.alert-box.success { background: rgba(16, 185, 129, 0.1); border-color: #10b981; }
-.signal { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.85em; font-weight: bold; margin-left: 10px; }
-.signal.buy { background: rgba(16, 185, 129, 0.2); color: #059669; }
-.signal.sell { background: rgba(239, 68, 68, 0.2)
-; color: #dc2626; }
-.signal.hold { background: rgba(251, 191, 36, 0.2); color: #d97706; }
-.loading { text-align: center; padding: 20px; color: #666; }
-@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .header h1 { font-size: 1.8em; } }
+
+.card:hover {
+transform: translateY(-5px);
+box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 15px;
+padding-bottom: 15px;
+border-bottom: 2px solid #f0f0f0;
+}
+
+.ticker-name {
+font-size: 1.8em;
+font-weight: bold;
+color: #667eea;
+}
+
+.price {
+font-size: 2em;
+font-weight: bold;
+margin: 10px 0;
+}
+
+.change {
+font-size: 1.2em;
+padding: 5px 15px;
+border-radius: 20px;
+display: inline-block;
+}
+
+.positive {
+color: #10b981;
+background: rgba(16, 185, 129, 0.1);
+}
+
+.negative {
+color: #ef4444;
+background: rgba(239, 68, 68, 0.1);
+}
+
+.stats {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 10px;
+margin: 15px 0;
+}
+
+.stat-item {
+background: #f8f9fa;
+padding: 10px;
+border-radius: 8px;
+}
+
+.stat-label {
+font-size: 0.85em;
+color: #666;
+margin-bottom: 5px;
+}
+
+.stat-value {
+font-size: 1.1em;
+font-weight: bold;
+color: #333;
+}
+
+.indicators {
+margin-top: 15px;
+padding-top: 15px;
+border-top: 2px solid #f0f0f0;
+}
+
+.indicator {
+display: flex;
+justify-content: space-between;
+margin: 8px 0;
+padding: 8px;
+background: #f8f9fa;
+border-radius: 5px;
+}
+
+.loading {
+text-align: center;
+padding: 20px;
+color: #666;
+}
+
+.refresh-btn {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+border: none;
+padding: 12px 30px;
+border-radius: 25px;
+font-size: 1em;
+cursor: pointer;
+box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+
+transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.market-overview {
+background: rgba(255, 255, 255, 0.95);
+border-radius: 15px;
+padding: 25px;
+margin-bottom: 30px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+color: #333;
+}
+
+.market-overview h2 {
+margin-bottom: 20px;
+color: #667eea;
+}
+
+.news-section {
+background: rgba(255, 255, 255, 0.95);
+border-radius: 15px;
+padding: 25px;
+margin-top: 30px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+color: #333;
+}
+
+.news-item {
+padding: 15px;
+margin: 10px 0;
+background: #f8f9fa;
+border-radius: 8px;
+border-left: 4px solid #667eea;
+transition: background 0.3s ease;
+}
+
+.news-item:hover {
+background: #e9ecef;
+}
+
+.alert-box {
+background: rgba(239, 68, 68, 0.1);
+border: 2px solid #ef4444;
+border-radius: 10px;
+padding: 15px;
+margin-bottom: 20px;
+}
+
+.alert-box.success {
+background: rgba(16, 185, 129, 0.1);
+border-color: #10b981;
+}
+
+@media (max-width: 768px) {
+.grid {
+grid-template-columns: 1fr;
+}
+
+.header h1 {
+font-size: 1.8em;
+}
+}
+
+.chart-placeholder {
+background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+border-radius: 8px;
+padding: 40px;
+text-align: center;
+margin: 15px 0;
+color: #666;
+font-style: italic;
+}
+
+.signal {
+display: inline-block;
+padding: 4px 12px;
+border-radius: 12px;
+font-size: 0.85em;
+font-weight: bold;
+margin-left: 10px;
+}
+
+.signal.buy {
+background: rgba(16, 185, 129, 0.2);
+color: #059669;
+}
+
+.signal.sell {
+background: rgba(239, 68, 68, 0.2);
+color: #dc2626;
+}
+
+.signal.hold {
+background: rgba(251, 191, 36, 0.2);
+color: #d97706;
+}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="header">
 <h1>📊 Trading Dashboard</h1>
-<p>Real-Time Market Data</p>
-<div class="live-badge">🔴 LIVE DATA - Finnhub API</div>
-<p style="font-size:0.9em;opacity:0.8;margin-top:10px;">Last Updated: <span id="lastUpdate">Loading...</span></p>
+<p>Tech Stocks & SPY Analysis</p>
+<p class="last-updated">Last Updated: <span id="lastUpdate">Loading...</span></p>
 <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
 </div>
+
 <div class="market-overview">
 <h2>Market Overview</h2>
 <div id="marketStatus" class="loading">Loading market data...</div>
 </div>
-<div id="stockGrid" class="grid"></div>
+
+<div id="stockGrid" class="grid">
 </div>
+
+<div class="news-section">
+<h2>📰 Latest Market News</h2>
+<div id="newsContainer">
+<div class="loading">Loading news...</div>
+</div>
+</div>
+</div>
+
 <script>
-const API_KEY = d6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0;
 const TICKERS = ['SPY', 'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'META', 'TSLA', 'AMD'];
 
-async function fetchStockData(ticker) {
-try {
-const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${d6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0}`);
-const data = await response.json();
-if (data.c && data.c > 0) {
-const price = data.c, change = data.d, changePercent = data.dp;
-const rsi = calculateRSI(changePercent);
-const macd = change > 0 ? 'Bullish' : 'Bearish';
-let signal = 'HOLD';
-if (rsi < 30 && change < 0) signal = 'BUY';
-else if (rsi > 70 && change > 0) signal = 'SELL';
-else if (changePercent > 1.5) signal = 'BUY';
-else if (changePercent < -1.5) signal = 'SELL';
-return {
-ticker: ticker, price: price.toFixed(2), change: change.toFixed(2), changePercent: changePercent.toFixed(2),
-volume: 'N/A', high: data.h.toFixed(2), low: data.l.toFixed(2), open: data.o.toFixed(2),
-rsi: rsi.toFixed(1), macd: macd, signal: signal
-};
-} else { throw new Error('Invalid data'); }
-} catch (error) { console.error(`Error fetching ${ticker}:`, error); return null; }
-}
+function generateMockData(ticker) {
+const basePrice = {
+'SPY': 687, 'AAPL': 170, 'MSFT': 420, 'NVDA': 880,
+'GOOGL': 140, 'META': 485, 'TSLA': 195, 'AMD': 180
+}[ticker] || 100;
 
-function calculateRSI(changePercent) {
-const normalized = Math.abs(changePercent) * 10;
-return changePercent > 0 ? Math.min(50 + normalized, 100) : Math.max(50 - normalized, 0);
+const change = (Math.random() - 0.5) * 5;
+const changePercent = (change / basePrice * 100).toFixed(2);
+const price = (basePrice + change).toFixed(2);
+
+return {
+ticker: ticker, price: price, change: change.toFixed(2), changePercent: changePercent,
+volume: (Math.random() * 50000000 + 10000000).toFixed(0),
+high: (parseFloat(price) + Math
+.random() * 5).toFixed(2),
+low: (parseFloat(price) - Math.random() * 5).toFixed(2),
+open: (parseFloat(price) + (Math.random() - 0.5) * 3).toFixed(2),
+rsi: (Math.random() * 40 + 30).toFixed(1),
+macd: Math.random() > 0.5 ? 'Bullish' : 'Bearish',
+signal: Math.random() > 0.6 ? 'BUY' : (Math.random() > 0.5 ? 'HOLD' : 'SELL')
+};
 }
 
 function createStockCard(data) {
-if (!data) return '<div class="card"><div style="color:#ef4444;padding:20px;">Failed to load</div></div>';
 const isPositive = parseFloat(data.change) >= 0;
 const signalClass = data.signal.toLowerCase();
-return `<div class="card"><div class="card-header"><div class="ticker-name">${data.ticker}</div><span class="signal ${signalClass}">${data.signal}</span></div><div class="price">$${data.price}</div><div class="change ${isPositive ? 'positive' : 'negative'}">${isPositive ? '▲' : '▼'} ${Math.abs(data.change)} (${Math.abs(data.changePercent)}%)</div><div class="stats"><div class="stat-item"><div class="stat-label">Open</div><div class="stat-value">$${data.open}</div></div><div class="stat-item"><div class="stat-label">High</div><div class="stat-value">$${data.high}</div></div><div class="stat-item"><div class="stat-label">Low</div><div class="stat-value">$${data.low}</div></div><div class="stat-item"><div class="stat-label">RSI</div><div class="stat-value">${data.rsi}</div></div></div></div>`;
+return `<div class="card"><div class="card-header"><div class="ticker-name">${data.ticker}</div><span class="signal ${signalClass}">${data.signal}</span></div><div class="price">$${data.price}</div><div class="change ${isPositive ? 'positive' : 'negative'}">${isPositive ? '▲' : '▼'} ${Math.abs(data.change)} (${Math.abs(data.changePercent)}%)</div><div class="stats"><div class="stat-item"><div class="stat-label">Open</div><div class="stat-value">$${data.open}</div></div><div class="stat-item"><div class="stat-label">High</div><div class="stat-value">$${data.high}</div></div><div class="stat-item"><div class="stat-label">Low</div><div class="stat-value">$${data.low}</div></div><div class="stat-item"><div class="stat-label">Volume</div><div class="stat-value">${(data.volume/1000000).toFixed(1)}M</div></div></div><div class="indicators"><div class="indicator"><span>RSI (14)</span><strong>${data.rsi}</strong></div><div class="indicator"><span>MACD</span><strong>${data.macd}</strong></div></div><div class="chart-placeholder">📈 Chart (Connect to TradingView API)</div></div>`;
 }
 
 function updateMarketStatus() {
-const now = new Date(), hour = now.getHours(), day = now.getDay();
+const now = new Date();
+const hour = now.getHours();
+const day = now.getDay();
 let status = '';
 if (day === 0 || day === 6) status = '<div class="alert-box">🔒 Market Closed - Weekend</div>';
 else if (hour < 9 || (hour === 9 && now.getMinutes() < 30)) status = '<div class="alert-box">⏰ Pre-Market Trading</div>';
 else if (hour >= 16) status = '<div class="alert-box">🌙 After-Hours Trading</div>';
-else status = '<div class="alert-box success">✅ Market Open - Real-Time Data</div>';
-status += '<div class="stats" style="margin-top:15px;"><div class="stat-item"><div class="stat-label">Data Source</div><div class="stat-value">Finnhub</div></div><div class="stat-item"><div class="stat-label">Delay</div><div class="stat-value">Real-Time</div></div><div class="stat-item"><div class="stat-label">Update</div><div class="stat-value">60 sec</div></div></div>';
+else status = '<div class="alert-box success">✅ Market Open</div>';
+status += '<div class="stats" style="margin-top:15px;"><div class="stat-item"><div class="stat-label">VIX (Fear Index)</div><div class="stat-value">23.59</div></div><div class="stat-item"><div class="stat-label">Oil (Brent)</div><div class="stat-value">$78.50</div></div><div class="stat-item"><div class="stat-label">Gold</div><div class="stat-value">$5,367</div></div><div class="stat-item"><div class="stat-label">10Y Treasury</div><div class="stat-value">4.25%</div></div></div>';
 document.getElementById('marketStatus').innerHTML = status;
 }
 
-async function refreshData() {
-if (API_KEY === d6jc8j1r01ql467j6hrgd6jc8j1r01ql467j6hs0) {
-document.getElementById('stockGrid').innerHTML = '<div class="alert-box" style="grid-column:1/-1;"><strong>⚠️ API Key Required</strong><br>Please replace YOUR_API_KEY_HERE with your Finnhub API key.<br><br>Get free key: <a href="https://finnhub.io/register" target="_blank" style="color:#667eea;">finnhub.io/register</a></div>';
-return;
+function updateNews() {
+const news = [
+{title: '🔴 Iran-US Conflict: Strait of Hormuz Closed', time: '2 hours ago'},
+{title: '📊 Tech Stocks Show Resilience Despite Market Turmoil', time: '4 hours ago'},
+{title: '🛢️ Oil Prices Surge 8% on Supply Concerns', time: '5 hours ago'},
+{title: '💰 Gold Hits Near-Record Highs at $5,367', time: '6 hours ago'},
+{title: '🎯 Defense Stocks Rally: Lockheed +6%, Northrop +5%', time: '7 hours ago'}
+];
+const newsHtml = news.map(item => `<div class="news-item"><strong>${item.title}</strong><div style="color:#666;font-size:0.9em;margin-top:5px;">${item.time}</div></div>`).join('');
+document.getElementById('newsContainer').innerHTML = newsHtml;
 }
+
+function refreshData() {
 document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 const stockGrid = document.getElementById('stockGrid');
-stockGrid.innerHTML = '<div class="loading">Fetching real-time data from Finnhub...</div>';
-try {
-const promises = TICKERS.map(ticker => fetchStockData(ticker));
-const results = await Promise.all(promises);
-stockGrid.innerHTML = results.map(data => createStockCard(data)).join('');
-} catch (error) {
-console.error('Error:', error);
-stockGrid.innerHTML = '<div class="alert-box">Failed to fetch data. Check API key and try again.</div>';
-}
+stockGrid.innerHTML = TICKERS.map(ticker => createStockCard(generateMockData(ticker))).join('');
 updateMarketStatus();
+updateNews();
 }
 refreshData();
 setInterval(refreshData, 60000);
